@@ -139,9 +139,9 @@ int CommuToVm(string ip,string szGranule,string szCmd)
 		return -1; 
 	}
 	accountid[bytes]='\0';
-	if (strncmp(accountid,"update",6)==0)
+	if (strncmp(accountid,"fail",4)==0)
 	{
-		MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
+		MessageBox(NULL, "请联系管理员，计算资源不足！","",MB_OK);
 		wlog("CloudTerm\\cthandler.log",true,"accounitd error");
 		wlog("CloudTerm\\cthandler.log",true,"%s\n",accountid); 
 		return -1;
@@ -174,7 +174,7 @@ int CommuToVm(string ip,string szGranule,string szCmd)
 int _tmain(int argc, _TCHAR* argv[])
 {
 	userid=getenv("USERID");
-	password=getenv(password);
+	password=getenv("PASSWORD");
 	desdec(password,passworddes,"cac");
 	wlog("CloudTerm\\cthandler.log",true,"userid=%s,password=%s,passworddes=%s\n",userid,password,passworddes);
 	string sRecv(argv[1]);
@@ -247,7 +247,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 	if(CommuToVm(szIp,szGranule,szapp)!=0)
 	{
-		MessageBox(NULL,"hzw","eee",0);
+	//	MessageBox(NULL,"hzw","eee",0);
 		exit(-1);
 	}
 	nIndex++;
