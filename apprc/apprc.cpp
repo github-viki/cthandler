@@ -37,7 +37,7 @@ int tmp_sender(string ip,string port)
 	if(WSAStartup(MAKEWORD(2,2),&wsa)!=0)
 	{ 
 		MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-		wlog("CloudTerm\\cthandler.log",true,"socket initialize failed.\n"); 
+		wlog("CloudTerm\\cthandler.log",true,"ERROR:socket initialize failed.\n"); 
 		return -1; 
 	} 
 	//创建套接字 
@@ -45,7 +45,7 @@ int tmp_sender(string ip,string port)
 	if((sock=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP))==INVALID_SOCKET)
 	{ 
 		MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-		wlog("CloudTerm\\cthandler.log",true,"create socket failed.\n"); 
+		wlog("CloudTerm\\cthandler.log",true,"ERROR:create socket failed.\n"); 
 		return -1; 
 	} 
 	struct sockaddr_in serverAddress; 
@@ -57,7 +57,7 @@ int tmp_sender(string ip,string port)
 	if(connect(sock,(sockaddr*)&serverAddress,sizeof(serverAddress))==SOCKET_ERROR)
 	{ 
 		MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-		wlog("CloudTerm\\cthandler.log",true,"connect failed.\n"); 
+		wlog("CloudTerm\\cthandler.log",true,"ERROR:connect failed.\n"); 
 		return -1; 
 	} 
 	//printf("Message from %s: %s\n",inet_ntoa(serverAddress.sin_addr),buf); 
@@ -104,39 +104,39 @@ int CommuToVm(string ip,string szGranule,string szCmd)
 	if(send(sockToVm,"if=vmuser\n",strlen("if=vmuser\n"),0)==SOCKET_ERROR)
 	{ 
 		MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-		wlog("CloudTerm\\cthandler.log",true,"send data failed."); 
+		wlog("CloudTerm\\cthandler.log",true,"ERROR:send data failed."); 
 		return -1; 
 	} 
 	char tmp[10];
 	if((bytes = recv(sockToVm, tmp, 10, 0)) == SOCKET_ERROR)
 	{ 
 		MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-		wlog("CloudTerm\\cthandler.log",true,"recive data failed."); 
+		wlog("CloudTerm\\cthandler.log",true,"ERROR:recive data failed."); 
 		return -1; 
 	}
 	if (strncmp(tmp,"ok",2)!=0)
 	{
 		MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-		wlog("CloudTerm\\cthandler.log",true,"ok?"); 
+		wlog("CloudTerm\\cthandler.log",true,"ERROR:ok?"); 
 		return -1; 
 	}
 	//cdc:|userid|passworddes|appid|granule|
 	sprintf(SendInfo,"cdc:|%s|%s|%s|%s|%s|\n",userid,passwordes,appid,szGranule.c_str(),szCmd.c_str());
-	wlog("CloudTerm\\cthandler.log",true,"%s\n",SendInfo);
+	//wlog("CloudTerm\\cthandler.log",true,"%s\n",SendInfo);
 	if(send(sockToVm,SendInfo,strlen(SendInfo),0)==SOCKET_ERROR)
 	{ 
 		MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-		wlog("CloudTerm\\cthandler.log",true,"send data failed."); 
+		wlog("CloudTerm\\cthandler.log",true,"ERROR:send data failed."); 
 		return -1; 
 	} 
-	wlog("CloudTerm\\cthandler.log",true,"%s\n",tmp);
+	//wlog("CloudTerm\\cthandler.log",true,"%s\n",tmp);
 
 	char cRecv[1024];
 
 	if((bytes = recv(sockToVm, accountid, 1024, 0)) == SOCKET_ERROR)
 	{ 
 		MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-		wlog("CloudTerm\\cthandler.log",true,"recive data failed."); 
+		wlog("CloudTerm\\cthandler.log",true,"ERROR:recive data failed."); 
 		return -1; 
 	}
 	accountid[bytes]='\0';
@@ -144,8 +144,8 @@ int CommuToVm(string ip,string szGranule,string szCmd)
 	if (strncmp(accountid,"fail",4)==0)
 	{
 		MessageBox(NULL, "请联系管理员，计算资源不足！","",MB_OK);
-		wlog("CloudTerm\\cthandler.log",true,"accounitd error");
-		wlog("CloudTerm\\cthandler.log",true,"%s\n",accountid); 
+		wlog("CloudTerm\\cthandler.log",true,"ERROR:accounitd error");
+		wlog("CloudTerm\\cthandler.log",true,"ERROR:%s\n",accountid); 
 		return -1;
 	}
 	int i,j;
@@ -167,25 +167,26 @@ int CommuToVm(string ip,string szGranule,string szCmd)
 	}
 	vmpassportdes[j]='\0';
 	desdec(vmpassportdes,vmpassport,"cac");
-	wlog("CloudTerm\\cthandler.log",true,"%s\n",vmpassport);
+	//wlog("CloudTerm\\cthandler.log",true,"%s\n",vmpassport);
 	//wrlog("CloudTerm\\cthandler.log",SendInfo.c_str(),true); 
 
-	wlog("CloudTerm\\cthandler.log",true,"%s\n",accountid); 
+	//wlog("CloudTerm\\cthandler.log",true,"%s\n",accountid); 
 	return 0;
 }
 
 int _tmain(int argc, _TCHAR* argv[])
 {
+	wlog("CloudTerm\\cthandler.log",true,"%s:start\n",argv[0]);
 	userid=getenv("USERID");
 	password=getenv("PASSWORD");
 	desenc(password,passwordes,"cac");
-	wlog("CloudTerm\\cthandler.log",true,"userid ,%s,password,%s\n",userid,password);
+	//wlog("CloudTerm\\cthandler.log",true,"userid ,%s,password,%s\n",userid,password);
 
 	string sRecv(argv[1]);
 	int loc1;
 	((loc1=sRecv.find('\"'))!=string::npos)?sRecv.erase(loc1,1):sRecv;
-	wlog("CloudTerm\\cthandler.log",true,"apprc start\n");
-	wlog("CloudTerm\\cthandler.log",true,"%s\n",argv[1]);
+	//wlog("CloudTerm\\cthandler.log",true,"apprc start\n");
+	//wlog("CloudTerm\\cthandler.log",true,"%s\n",argv[1]);
 	STARTUPINFO si;
 	PROCESS_INFORMATION pi;
 	ZeroMemory(&si, sizeof(si));
@@ -200,10 +201,10 @@ int _tmain(int argc, _TCHAR* argv[])
 	ZeroMemory(szPassword, sizeof(szPassword));
 	int nIndex(-1);
 	(nIndex = sRecv.find("|setting=")) != string::npos? nIndex += strlen("|setting="):
-		wlog("CloudTerm\\cthandler.log",true,"rd command error");
+		wlog("CloudTerm\\cthandler.log",true,"ERROR:rc command error");
 	if (nIndex==-1)
 	{
-		MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
+		MessageBox(NULL, "计算资源不足，请联系管理员",argv[0],MB_OK);
 		return -1;
 	}
 	int i = 0;
@@ -218,10 +219,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	{
 		sAppname = "cacrd";
 	}
-	else
-	{	    
-		ConvertUtf8ToGBK(sAppname);
-	}
+
 	//wrlog("CloudTerm\\CloudTerm.log",sAppname.c_str(),true);
 	nIndex++;
 	i = 0;
@@ -285,7 +283,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	{
 		MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
 		char szError[256];
-		sprintf(szError, "CreateProcess failed (%d).", GetLastError());
+		sprintf(szError, "ERROR:CreateProcess failed (%d).", GetLastError());
 		wlog("CloudTerm\\cthandler.log",true,"%s",szError);
 		return -1;
 	}
@@ -293,7 +291,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	{
 		CloseHandle( pi.hProcess );
 		CloseHandle( pi.hThread );
-		wlog("CloudTerm\\cthandler.log",true,"rc complete\n");
+		wlog("CloudTerm\\cthandler.log",true,"%s complete\n",argv[0]);
 	}
 	return 0;
 }

@@ -8,6 +8,8 @@
 using namespace std;
 #pragma comment(lib,"simpleDll.lib")
 #pragma comment(lib, "ws2_32.lib")
+#pragma comment( linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"" ) // 设置连接器选项
+//去掉控制台
 int InitSocket(string ip,string port)
 {
 	WSADATA wsa; 
@@ -43,6 +45,7 @@ int InitSocket(string ip,string port)
 }
 int _tmain(int argc, _TCHAR* argv[])
 {
+	wlog("CloudTerm\\cthandler.log",true,"%s:start\n",argv[0]);
 	//if(argc<2)
 	//{
 	//	MessageBox(NULL,"argc","error",0);
@@ -90,25 +93,29 @@ int _tmain(int argc, _TCHAR* argv[])
 		wlog("CloudTerm\\cthandler.log",true,"GetUserNameError %d\n",GetLastError());
 		return -1;
 	}
-	wlog("CloudTerm\\cthandler.log",true,"username %s\n",lpchbuf);
+	//wlog("CloudTerm\\cthandler.log",true,"username %s\n",lpchbuf);
 	TCHAR pChPipeName[128]={'0'};
 	sprintf(pChPipeName,"\\\\.\\pipe\\CTLIS%s",lpchbuf);
 	wlog("CloudTerm\\cthandler.log",true,"pchpipename %s\n",pChPipeName);
-	if (WaitNamedPipe(pChPipeName, NMPWAIT_WAIT_FOREVER) == FALSE)
+	label: if (WaitNamedPipe(pChPipeName, NMPWAIT_WAIT_FOREVER) == FALSE)
 	{
-		wlog("CloudTerm\\cthandler.log",true,"waitnamedpipe %d\n",GetLastError());
+		wlog("CloudTerm\\cthandler.log",true,"ERROR:waitnamedpipe %d\n",GetLastError());
+		MessageBox(NULL,"请首先登录ct",argv[0],NULL);
 		return -1;
 	}
 	HANDLE hPipe = CreateFile(pChPipeName, GENERIC_READ | GENERIC_WRITE,0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hPipe == INVALID_HANDLE_VALUE)
 	{
-		wlog("CloudTerm\\cthandler.log",true,"createfile %d\n",GetLastError());
+		
+		wlog("CloudTerm\\cthandler.log",true,"ERROR：createfile %d\n",GetLastError());
+		
+		MessageBox(NULL,"请首先登录ct",argv[0],NULL);
 		return -1;
 	}
 
 	else
 	{
-		wlog("CloudTerm\\cthandler.log",true,"write suc\n");
+		//wlog("CloudTerm\\cthandler.log",true,"write suc\n");
 	}
 	// 向管道写入数据
 	DWORD WriteNum=0;
@@ -117,13 +124,14 @@ int _tmain(int argc, _TCHAR* argv[])
 	if (WriteFile(hPipe, lpchbuf, strlen(lpchbuf), 
 		&WriteNum, NULL) == FALSE)
 	{
-		wlog("CloudTerm\\cthandler.log",true,"write file %d\n",GetLastError());
+		wlog("CloudTerm\\cthandler.log",true,"ERROR write file %d\n",GetLastError());
 		return -1;
 	} else {
-		wlog("CloudTerm\\cthandler.log",true,"write %s\n",lpchbuf);
+		//wlog("CloudTerm\\cthandler.log",true,"write %s\n",lpchbuf);
 
 	}
 	CloseHandle(hPipe); // 关闭管道句柄
+	wlog("CloudTerm\\cthandler.log",true,"%s:complete\n",argv[0]);
 	return 0;
 	
 }
