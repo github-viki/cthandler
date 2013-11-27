@@ -296,4 +296,4 @@ int _tmain(int argc, _TCHAR* argv[])
 		wlog("CloudTerm\\cthandler.log",true,"rc complete\n");
 	}
 	return 0;
-}//restbranch
+}//zhenjiang
