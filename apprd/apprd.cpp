@@ -92,6 +92,7 @@ void ConvertUtf8ToGBK(string& strUtf8)
 }
 int CommuToVm(string ip,string szGranule,string szCmd)
 {
+	//char *appid="23";
 	char *appid;
 	appid=getenv("APPID");
 	SOCKET sockToVm=tmp_sender(ip,"50000");
@@ -120,7 +121,7 @@ int CommuToVm(string ip,string szGranule,string szCmd)
 		return -1; 
 	}
 
-	//sprintf(SendInfo,"cdc:|%s|%s|%s|%s|%s|\n",userid,passworddes,appid,szGranule.c_str(),szCmd.c_str());
+	sprintf(SendInfo,"cdc:|%s|%s|%s|%s|%s|\n",userid,passworddes,appid,szGranule.c_str(),szCmd.c_str());
 	//wlog("CloudTerm\\cthandler.log",true,"send data failed.");
 	if(send(sockToVm,SendInfo,strlen(SendInfo),0)==SOCKET_ERROR)
 	{ 
@@ -139,6 +140,7 @@ int CommuToVm(string ip,string szGranule,string szCmd)
 		return -1; 
 	}
 	accountid[bytes]='\0';
+	closesocket(sockToVm);
 	if (strncmp(accountid,"fail",4)==0)
 	{
 		MessageBox(NULL, "请联系管理员，计算资源不足！","",MB_OK);
@@ -175,10 +177,24 @@ int _tmain(int argc, _TCHAR* argv[])
 {
 	wlog("CloudTerm\\cthandler.log",true,"%s:start\n",argv[0]);
 	userid=getenv("USERID");
+	if(userid==NULL)
+	{
+		return -1;
+	}
+	wlog("CloudTerm\\cthandler.log",true,"%s\n",userid);
 	password=getenv("PASSWORD");
-	desdec(password,passworddes,"cac");
-	
+	if(password==NULL)
+		return -1;
+	//userid="1";
+	//password="111111";
+	wlog("CloudTerm\\cthandler.log",true,"%s\n",password);
+	desenc(password,passworddes,"cac");
+	wlog("CloudTerm\\cthandler.log",true,"%s\n",passworddes);
 	string sRecv(argv[1]);
+	wlog("CloudTerm\\cthandler.log",true,"%s\n",sRecv.c_str());
+	int loc1;
+	((loc1=sRecv.find('\"'))!=string::npos)?sRecv.erase(loc1,1):sRecv;
+	wlog("CloudTerm\\cthandler.log",true,"%s\n",sRecv.c_str());  
 	//wlog("CloudTerm\\cthandler.log",true,"apprd start\n");
 	//wlog("CloudTerm\\cthandler.log",true,"%s\n",argv[1]);
 	STARTUPINFO si;
@@ -196,7 +212,8 @@ int _tmain(int argc, _TCHAR* argv[])
 	int nIndex(-1);
 	(nIndex = sRecv.find("|setting=")) != string::npos? nIndex += strlen("|setting="):
 		wlog("CloudTerm\\cthandler.log",true,"rd command error");
-	MessageBox(NULL,"计算资源不足，请联系管理员",argv[0],0);
+	
+	if(nIndex==-1) {MessageBox(NULL,"计算资源不足，请联系管理员",argv[0],0);return -1;}
 	int i = 0;
 	while (sRecv[nIndex] != '*')
 	{

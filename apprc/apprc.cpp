@@ -141,6 +141,7 @@ int CommuToVm(string ip,string szGranule,string szCmd)
 	}
 	accountid[bytes]='\0';
 	wlog("CloudTerm\\cthandler.log",true,"%s\n",accountid);
+	closesocket(sockToVm);
 	if (strncmp(accountid,"fail",4)==0)
 	{
 		MessageBox(NULL, "请联系管理员，计算资源不足！","",MB_OK);

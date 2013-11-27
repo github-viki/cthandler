@@ -91,6 +91,10 @@ int tmp_sender(string ip,string port)
 	} 
 	//创建套接字 
 	SOCKET sock; 
+	//DWORD bufLength=1460*4;
+	//setsockopt(sock,SOL_SOCKET,SO_SNDBUF,&bufLength,sizeof(bufLength));
+	//setsockopt(sock,SOL_SOCKET,SO_RCVBUF,&bufLength,sizeof(bufLength));
+	//setsockopt(sock,SOL_SOCKET,SO,&bufLength,sizeof(bufLength));
 	if((sock=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP))==INVALID_SOCKET)
 	{ 
 		MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
@@ -102,6 +106,7 @@ int tmp_sender(string ip,string port)
 	serverAddress.sin_family=AF_INET; 
 	serverAddress.sin_addr.S_un.S_addr = inet_addr(ip.c_str()); 
 	serverAddress.sin_port = htons(atoi(port.c_str())); 
+	
 	//建立和服务器的连接 
 	if(connect(sock,(sockaddr*)&serverAddress,sizeof(serverAddress))==SOCKET_ERROR)
 	{ 
@@ -185,7 +190,9 @@ int CommuToVm(string ip)
 		wrlog("CloudTerm\\cthandler.log","recive data failed.",true); 
 		return -1; 
 	}
+
 	accountid[bytes]='\0';
+	closesocket(sockToVm);
 	if (strncmp(accountid,"update",6)==0)
 	{
 		MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
