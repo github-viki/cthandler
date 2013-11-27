@@ -150,16 +150,16 @@ int getCCipRandom(char ips[][24],int *ipcount)
 		iptemp[count][j] = '\0';
 		count++;
 	}*/
-	//wlog("CloudTerm\\cthandler.log",true,"getcciprandom\n");
+	wlog("CloudTerm\\cthandler.log",true,"getcciprandom\n");
 	char iptemp[30][24]={'0'};
 	int count=0;
 	if (getenv("CCNUM")==0)
 	{
-		wlog("CloudTerm\\cthandler.log",true,"ERROR:getenv error\n");
+		wlog("CloudTerm\\cthandler.log",true,"getenv error\n");
 		return -1;
 	}
 	count=atoi(getenv("CCNUM"));
-	//wlog("CloudTerm\\cthandler.log",true,"%d\n",count);
+	wlog("CloudTerm\\cthandler.log",true,"%d\n",count);
 	char tmp[10]={'0'};
 	for (int i=0;i<count;i++)
 	{
@@ -167,7 +167,7 @@ int getCCipRandom(char ips[][24],int *ipcount)
 		sprintf(tmp,"CC%d",i);
 		if (getenv(tmp)==0)
 		{
-			wlog("CloudTerm\\cthandler.log",true,"ERRPR:getenv error\n");
+			wlog("CloudTerm\\cthandler.log",true,"getenv error\n");
 			return -1;
 		}
 		strcpy(iptemp[i],getenv(tmp));
@@ -328,7 +328,7 @@ int tmp_sender(string ip,string port);
 
 int configuration()
 {
-	//wlog("CloudTerm\\cthandler.log",true,"configuration\n");
+	wlog("CloudTerm\\cthandler.log",true,"configuration\n");
 	string config_path = GetModuleDir();
 
 	int find = config_path.find_last_of("\\");
@@ -360,7 +360,7 @@ int configuration()
 	string ip;
 	if(!getCCipRandom(ccipArray,&ipcount))
 	{MessageBox(NULL, "ÍøÂçÎÞÏìÓ¦£¬Çë¼ì²éÍøÂçÊÇ·ñ³©Í¨£¿","",MB_OK);
-	wlog("CloudTerm\\cthandler.log",true,"ERROR:read ip FAILED\n");
+	wlog("CloudTerm\\cthandler.log",true,"read ip FAILED\n");
 	return -1;}
 	int i;
 	for (i=0;i<ipcount;i++)
@@ -1077,12 +1077,12 @@ int CallApp(string path)
 	{
 		MessageBox(NULL, "ÍøÂçÎÞÏìÓ¦£¬Çë¼ì²éÍøÂçÊÇ·ñ³©Í¨£¿","",MB_OK);
 		char szError[256];
-		sprintf(szError, "ERROR:CreateProcess failed (%d).\n", GetLastError());
+		sprintf(szError, "CreateProcess failed (%d).", GetLastError());
 		wrlog("CloudTerm\\cthandler.log",szError,true);
 	return -1;
 	}
 	else{
-		wrlog("CloudTerm\\cthandler.log"," caccthandler:complete\n",true);
+		wrlog("CloudTerm\\cthandler.log"," complete",true);
 		CloseHandle( pi.hProcess );
 		CloseHandle( pi.hThread );
 		return 0;
@@ -1146,9 +1146,8 @@ int main(int argc, char **argv)
 		return -1;
 	}
 	closesocket(sockfd);*/
-	wlog("CloudTerm\\cthandler.log",true,"%s:start\n",argv[0]);
 	string arg(argv[1]);
-	//wlog("CloudTerm\\cthandler.log",true,"recv:%s",arg.c_str());
+	wlog("CloudTerm\\cthandler.log",true,"recv:%s",arg.c_str());
 	if(configuration())
 	{
 		MessageBox(NULL, "ÍøÂçÎÞÏìÓ¦£¬Çë¼ì²éÍøÂçÊÇ·ñ³©Í¨£¿","",MB_OK);
@@ -1179,6 +1178,6 @@ int main(int argc, char **argv)
 	else
 	{
 		MessageBox(NULL, "ÍøÂçÎÞÏìÓ¦£¬Çë¼ì²éÍøÂçÊÇ·ñ³©Í¨£¿","",MB_OK);
-		wrlog("CloudTerm\\cthandler.log","ERROR:Ca Request Illeage!",true);
+		wrlog("CloudTerm\\cthandler.log","Ca Request Illeage!",true);
 	}
 }
