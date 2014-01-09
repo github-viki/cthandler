@@ -14,7 +14,6 @@
 #include <ctime>
 #include <WinSock.h>
 using namespace std;
-
 #include <stdlib.h>
 #pragma comment(lib, "WtsApi32.lib")
 #pragma comment(lib, "ws2_32.lib")
@@ -206,7 +205,6 @@ void VdProcess(char *cRecv)
 	CloseHandle( pi.hThread );
 	wrlog("CloudTerm\\cthandler.log","vdcomplete",true);
 }
-
 int _tmain(int argc, _TCHAR* argv[])
 {
 	if(argc<2)

@@ -262,7 +262,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	nIndex++;
 	i = 0;
 	string rdp_path;
-	rdp_path = GetModuleDir() + "\\if\\cacrd_old.exe";
+	rdp_path = GetModuleDir() + "\\if\\cacra.exe";
 	string scmd;
 	scmd = rdp_path+" -t "+ "\""+ sAppname + "\"" + " -s "+ szIp + " -d "+ szPort+" -u "+vmuserid+" -p "+vmpassport;
 	string logmsg("启动程序及传入参数：");
