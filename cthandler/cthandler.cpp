@@ -45,48 +45,13 @@ int InitSocket(string ip,string port)
 }
 int _tmain(int argc, _TCHAR* argv[])
 {
+	if (argc<2)
+	{
+		wlog("CloudTerm\\cthandler.log",true,"%s:start arvc wrong\n",argv[0]);
+		return -1;
+	}
 	wlog("CloudTerm\\cthandler.log",true,"%s:start\n",argv[0]);
-	//if(argc<2)
-	//{
-	//	MessageBox(NULL,"argc","error",0);
-	//	return -1;
-	//}
-	//SOCKET sockfd=InitSocket("127.0.0.1","50000");
-	//if(sockfd==-1)
-	//{return -1;}
-	//char SendInfo[256]={'\0'};
-	//int bytes;
-	////SendInfo="cdc:|"+userid+"|"+passport+"|\n";
-	//if(send(sockfd,"if=cthandler\n",strlen("if=cthandler\n"),0)==SOCKET_ERROR)
-	//{ 
-	//	MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-	//	wlog("CloudTerm\\cthandler.log",true,"send data failed."); 
-	//	return -1; 
-	//} 
-	//char tmp[10];
-	//if((bytes = recv(sockfd, tmp, 10, 0)) == SOCKET_ERROR)
-	//{ 
-	//	MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-	//	wlog("CloudTerm\\cthandler.log",true,"recive data failed."); 
-	//	return -1; 
-	//}
-	//if (strncmp(tmp,"ok",2)!=0)
-	//{
-	//	MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-	//	wlog("CloudTerm\\cthandler.log",true,"ok?"); 
-	//	return -1; 
-	//}
-	//wlog("CloudTerm\\cthandler.log",true,"%s\n",argv[1]);
-	//char sendBuf[1024]={'0'};
-	//sprintf(sendBuf,"%s\n",argv[1]);
-	//if(send(sockfd,sendBuf,strlen(sendBuf),0)==SOCKET_ERROR)
-	//{ 
-	//	MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-	//	wlog("CloudTerm\\cthandler.log",true,"send data failed."); 
-	//	return -1; 
-	//}
-	//closesocket(sockfd);
-	TCHAR lpchbuf[64]={'0'};
+	TCHAR lpchbuf[64]={'\0'};
 	DWORD dSize=64;
 	if(!GetUserName(lpchbuf,&dSize))
 	{
@@ -94,29 +59,33 @@ int _tmain(int argc, _TCHAR* argv[])
 		return -1;
 	}
 	//wlog("CloudTerm\\cthandler.log",true,"username %s\n",lpchbuf);
-	TCHAR pChPipeName[128]={'0'};
+	TCHAR pChPipeName[128]={'\0'};
 	sprintf(pChPipeName,"\\\\.\\pipe\\CTLIS%s",lpchbuf);
 	wlog("CloudTerm\\cthandler.log",true,"pchpipename %s\n",pChPipeName);
-	label: if (WaitNamedPipe(pChPipeName, NMPWAIT_WAIT_FOREVER) == FALSE)
-	{
-		wlog("CloudTerm\\cthandler.log",true,"ERROR:waitnamedpipe %d\n",GetLastError());
-		MessageBox(NULL,"请首先登录ct",argv[0],NULL);
-		return -1;
-	}
-	HANDLE hPipe = CreateFile(pChPipeName, GENERIC_READ | GENERIC_WRITE,0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-	if (hPipe == INVALID_HANDLE_VALUE)
-	{
-		
-		wlog("CloudTerm\\cthandler.log",true,"ERROR：createfile %d\n",GetLastError());
-		
-		MessageBox(NULL,"请首先登录ct",argv[0],NULL);
-		return -1;
-	}
 
-	else
-	{
-		//wlog("CloudTerm\\cthandler.log",true,"write suc\n");
-	}
+label: if (WaitNamedPipe(pChPipeName, NMPWAIT_WAIT_FOREVER) == FALSE)
+	   {
+		   wlog("CloudTerm\\cthandler.log",true,"ERROR:waitnamedpipe %d\n",GetLastError());
+		   MessageBox(NULL,"请首先登录ct",argv[0],NULL);
+		   if(GetLastError()==ERROR_PIPE_BUSY)
+		   {
+			   goto label;
+		   }
+		   else
+		   
+		   {return -1;}
+	   }
+	   
+	   HANDLE hPipe = CreateFile(pChPipeName, GENERIC_READ | GENERIC_WRITE,0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	   if (hPipe == INVALID_HANDLE_VALUE)
+	   {
+
+		   wlog("CloudTerm\\cthandler.log",true,"ERROR：createfile %d\n",GetLastError());
+
+		   MessageBox(NULL,"请首先登录ct",argv[0],NULL);
+		   return -1;
+	   }
+		
 	// 向管道写入数据
 	DWORD WriteNum=0;
 	memset(lpchbuf,0,64);

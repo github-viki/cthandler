@@ -27,6 +27,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cthandler", "cthandler\ctha
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "appra", "appra\appra.vcxproj", "{69A654DC-F32C-4593-A2C4-9EF02BCEA5A1}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "apprdf", "apprdf\apprdf.vcxproj", "{26B1D50D-B6A6-4302-B71D-4F51EB3715B4}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "apprdu", "apprdu\apprdu.vcxproj", "{394E2758-D196-444D-9E92-40DEE58DB2B2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -85,6 +89,14 @@ Global
 		{69A654DC-F32C-4593-A2C4-9EF02BCEA5A1}.Debug|Win32.Build.0 = Debug|Win32
 		{69A654DC-F32C-4593-A2C4-9EF02BCEA5A1}.Release|Win32.ActiveCfg = Release|Win32
 		{69A654DC-F32C-4593-A2C4-9EF02BCEA5A1}.Release|Win32.Build.0 = Release|Win32
+		{26B1D50D-B6A6-4302-B71D-4F51EB3715B4}.Debug|Win32.ActiveCfg = Debug|Win32
+		{26B1D50D-B6A6-4302-B71D-4F51EB3715B4}.Debug|Win32.Build.0 = Debug|Win32
+		{26B1D50D-B6A6-4302-B71D-4F51EB3715B4}.Release|Win32.ActiveCfg = Release|Win32
+		{26B1D50D-B6A6-4302-B71D-4F51EB3715B4}.Release|Win32.Build.0 = Release|Win32
+		{394E2758-D196-444D-9E92-40DEE58DB2B2}.Debug|Win32.ActiveCfg = Debug|Win32
+		{394E2758-D196-444D-9E92-40DEE58DB2B2}.Debug|Win32.Build.0 = Debug|Win32
+		{394E2758-D196-444D-9E92-40DEE58DB2B2}.Release|Win32.ActiveCfg = Release|Win32
+		{394E2758-D196-444D-9E92-40DEE58DB2B2}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
