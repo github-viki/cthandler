@@ -66,14 +66,14 @@ int _tmain(int argc, _TCHAR* argv[])
 label: if (WaitNamedPipe(pChPipeName, NMPWAIT_WAIT_FOREVER) == FALSE)
 	   {
 		   wlog("CloudTerm\\cthandler.log",true,"ERROR:waitnamedpipe %d\n",GetLastError());
-		   MessageBox(NULL,"请首先登录ct",argv[0],NULL);
+		   
 		   if(GetLastError()==ERROR_PIPE_BUSY)
 		   {
 			   goto label;
 		   }
 		   else
 		   
-		   {return -1;}
+		   {MessageBox(NULL,"请首先登录ct",argv[0],NULL);return -1;}
 	   }
 	   
 	   HANDLE hPipe = CreateFile(pChPipeName, GENERIC_READ | GENERIC_WRITE,0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);

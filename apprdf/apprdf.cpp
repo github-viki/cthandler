@@ -22,10 +22,11 @@ using namespace std;
 #pragma comment(lib,"cloudenc.lib")
 #pragma comment(lib, "WtsApi32.lib")
 #pragma comment(lib, "ws2_32.lib")
-char accountid[20]="";
-char vmuserid[20]="";
-char vmpassport[128]="";
-char vmpassportdes[256]="";
+char accountid[20]={'\0'};
+/*虚拟机内的用户id和密码*/
+char vmuserid[20]={'\0'};
+char vmpassport[128]={'\0'};
+char vmpassportdes[256]={'\0'};
 char *userid;
 char *password;
 char passworddes[1024]={'0'};
@@ -270,11 +271,11 @@ int _tmain(int argc, _TCHAR* argv[])
 	i = 0;
 	string rdp_path;
 	/*曹旭东
-	新增apprdf类型，在apprd的基础上新增 -f 参数 
+	新增apprdf类型，在apprd的基础上新增 -fullscreen 1 参数 
 	大概是全屏的意思吧。*/
 	rdp_path = GetModuleDir() + "\\if\\cacrd_old.exe"; 
 	string scmd;
-	scmd = rdp_path+" -t "+ "\""+ sAppname + "\"" + " -s "+ szIp + " -d "+ szPort+" -u "+vmuserid+" -p "+vmpassport+ " -f full";
+	scmd = rdp_path+" -t "+ "\""+ sAppname + "\"" + " -s "+ szIp + " -d "+ szPort+" -u "+vmuserid+" -p "+vmpassport+ " -fullscreen 1";
 	string logmsg("启动程序及传入参数：");
 	logmsg+=scmd;
 	wlog("CloudTerm\\cthandler.log",true,"%s\n",logmsg.c_str());
