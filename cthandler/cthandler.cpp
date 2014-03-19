@@ -73,7 +73,10 @@ label: if (WaitNamedPipe(pChPipeName, NMPWAIT_WAIT_FOREVER) == FALSE)
 		   }
 		   else
 		   
-		   {MessageBox(NULL,"请首先登录ct",argv[0],NULL);return -1;}
+		   {
+			   if(GetLastError()==ERROR_FILE_NOT_FOUND)MessageBox(NULL,"请首先登录ct",argv[0],NULL);
+			   return -1;
+		   }
 	   }
 	   
 	   HANDLE hPipe = CreateFile(pChPipeName, GENERIC_READ | GENERIC_WRITE,0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -81,7 +84,7 @@ label: if (WaitNamedPipe(pChPipeName, NMPWAIT_WAIT_FOREVER) == FALSE)
 	   {
 
 		   wlog("CloudTerm\\cthandler.log",true,"ERROR：createfile %d\n",GetLastError());
-
+		   if(GetLastError()==ERROR_FILE_NOT_FOUND)
 		   MessageBox(NULL,"请首先登录ct",argv[0],NULL);
 		   return -1;
 	   }

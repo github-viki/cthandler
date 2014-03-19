@@ -264,7 +264,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	string rdp_path;
 	rdp_path = GetModuleDir() + "\\if\\cacrd_old.exe";
 	string scmd;
-	scmd = rdp_path+" -t "+ "\""+ sAppname + "\"" + " -s "+ szIp + " -d "+ szPort+" -u "+vmuserid+" -p "+vmpassport " -e "+"\""+szapp+"\"";
+	scmd = rdp_path+" -t "+ "\""+ sAppname + "\"" + " -s "+ szIp + " -d "+ szPort+" -u "+vmuserid+" -p "+vmpassport+" -e "+"\""+szapp+"\"";
 	string logmsg("启动程序及传入参数：");
 	logmsg+=scmd;
 	wlog("CloudTerm\\cthandler.log",true,"%s\n",logmsg.c_str());
