@@ -1,0 +1,12 @@
+ct->cc:if=clickapp
+ct<-cc:ok
+ct->cc:|userid|appid|
+ct<-cc: (1).|0|	个性化应用
+		(2).|1|	普通应用
+		(3).|2|	是个性化应用但是资源不足以普通应用方式打开
+		(4).|3|	未知错误
+ct->cc:ok
+ct<-cc: (1).|0|	个性化应用
+|infotype=rdf|setting=PPT*172.20.250.99*vmusername*vmpasswd*3389*opener C:\Program Files\Microsoft Office\OFFICE11\POWERPNT.EXE*1|
+		(2).|1|	普通应用
+|infotype=rdf|setting=PPT*172.20.250.99*vmusername*vmpasswd*3389*opener C:\Program Files\Microsoft Office\OFFICE11\POWERPNT.EXE*1

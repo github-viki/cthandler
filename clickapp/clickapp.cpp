@@ -105,6 +105,28 @@ int tmp_sender(string ip,string port)
 	//printf("Message from %s: %s\n",inet_ntoa(serverAddress.sin_addr),buf); 
 	return sock;
 }
+int NonBlockNetComm(string ip,string port)
+{
+	WSADATA wsa; 
+	//初始化套接字DLL 
+	if(WSAStartup(MAKEWORD(2,2),&wsa)!=0)
+	{ 
+		MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
+		wlog("CloudTerm\\cthandler.log",true,"ERROR:socket initialize failed.\n"); 
+		return -1; 
+	} 
+	//创建套接字 
+	SOCKET sock; 
+	int ret;
+	unsigned long ul=1;
+	ret=ioctlsocket(sock,FIONBIO,(unsigned long *)&ul);
+	if(ret)
+	{
+		wlog("CloudTerm\\cthandler.log",true,"ioctlsocket %d\n",WSAGetLastError());
+		return -1;
+	}
+
+}
 string GetModuleDir() 
 { 
 	HMODULE module = GetModuleHandle(0); 
@@ -195,6 +217,7 @@ int handler(char *cRecv)
 	CallApp(scmd);
 	return 0;
 }
+
 int _tmain(int argc, _TCHAR* argv[])
 {
 	if(argc!=3)
@@ -306,6 +329,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 	return 0;
 }
+
 
 
 
