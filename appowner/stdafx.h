@@ -21,16 +21,17 @@
 #include <WinSock.h>
 #include "cloudenc.h"
 #include "simpleDll.h"
-#define ERRDLL
+/*使用dllimport*/
+#define  ERRDLL
 #include "errmsg.h"
 using namespace std;
 
 #include <stdlib.h>
-#pragma comment(lib,"errmsg.lib")
 #pragma comment(lib,"simpleDll.lib")
 #pragma comment(lib, "WtsApi32.lib")
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib,"cloudenc.lib")
+#pragma comment(lib,"errmsg.lib")
 // TODO: 在此处引用程序需要的其他头文件
 //错误代码详情
 

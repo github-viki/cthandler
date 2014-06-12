@@ -2,172 +2,22 @@
 //
 
 #include "stdafx.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <windows.h>
-#include <Wtsapi32.h>
-#include <algorithm>
-#include <direct.h>
-#include <iostream>
-#include <string>
-#include <io.h>
-#include <windows.h>
-#include <ctime>
-#include <WinSock.h>
-#include "cloudenc.h"
-#include "simpleDll.h"
-using namespace std;
+#include <setjmp.h>
 
-#include <stdlib.h>
-#pragma comment(lib,"simpleDll.lib")
-#pragma comment(lib, "WtsApi32.lib")
-#pragma comment(lib, "ws2_32.lib")
+/*重新执行的次数*/
+//int re_count=0;
+/*跳转的环境*/
+jmp_buf jmp_env;
+
 string ccip;
 char userid[128];
 char appid[128];
-char passport[128];
-char passportdes[128];
-char vmuserid[10];
-void wrlog(char *filename,const char *p,bool writetime);
-void wrlog(char *filename,const char *p,bool writetime){
-	FILE *fp;
-	char cmd[200];
-	SYSTEMTIME nowTime;                            
-	GetLocalTime(&nowTime);	
-	char szTime[128];
-	ZeroMemory(szTime, sizeof(szTime));
-	sprintf(szTime, "%04d-%02d-%02d %02d:%02d:%02d", nowTime.wYear, nowTime.wMonth, nowTime.wDay, 
-		nowTime.wHour, nowTime.wMinute, nowTime.wSecond);
 
-
-	if( (_access( "C:\\Users\\Public", 0 )) == 0 )
-	{
-		if( (_access( "C:\\Users\\Public\\CloudTerm", 0 )) == -1 )
-		{
-			mkdir("C:\\Users\\Public\\CloudTerm");
-		}
-		sprintf(cmd,"C:\\Users\\Public\\%s",filename);
-	}
-	else
-	{
-		if( (_access( "C:\\Documents and Settings\\All Users\\CloudTerm", 0 )) == -1 )
-		{
-			mkdir("C:\\Documents and Settings\\All Users\\CloudTerm");
-		}
-		sprintf(cmd,"C:\\Documents and Settings\\All Users\\%s",filename);	
-	}
-
-
-
-	fp=fopen(cmd,"a+");
-	if(fp==NULL) return ;
-	if(writetime==true)
-	{fprintf(fp,"%s %s\n",szTime,p);}
-	else
-	{fprintf(fp,"%s\n",p);}
-	fclose(fp);
-}
-int tmp_sender(string ip,string port)
-{
-	WSADATA wsa; 
-	//初始化套接字DLL 
-	if(WSAStartup(MAKEWORD(2,2),&wsa)!=0)
-	{ 
-		MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-		wlog("CloudTerm\\cthandler.log",true,"ERROR:socket initialize failed.\n"); 
-		return -1; 
-	} 
-	//创建套接字 
-	SOCKET sock; 
-	//DWORD bufLength=1460*4;
-	//setsockopt(sock,SOL_SOCKET,SO_SNDBUF,&bufLength,sizeof(bufLength));
-	//setsockopt(sock,SOL_SOCKET,SO_RCVBUF,&bufLength,sizeof(bufLength));
-	//setsockopt(sock,SOL_SOCKET,SO,&bufLength,sizeof(bufLength));
-	if((sock=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP))==INVALID_SOCKET)
-	{ 
-		MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-		wlog("CloudTerm\\cthandler.log",true,"ERROR:create socket failed.\n"); 
-		return -1; 
-	} 
-	struct sockaddr_in serverAddress; 
-	memset(&serverAddress,0,sizeof(sockaddr_in)); 
-	serverAddress.sin_family=AF_INET; 
-	serverAddress.sin_addr.S_un.S_addr = inet_addr(ip.c_str()); 
-	serverAddress.sin_port = htons(atoi(port.c_str())); 
-	
-	//建立和服务器的连接 
-	if(connect(sock,(sockaddr*)&serverAddress,sizeof(serverAddress))==SOCKET_ERROR)
-	{ 
-		MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-		wlog("CloudTerm\\cthandler.log",true,"ERROR:connect failed.\n"); 
-		return -1; 
-	} 
-	//printf("Message from %s: %s\n",inet_ntoa(serverAddress.sin_addr),buf); 
-	return sock;
-}
-string GetModuleDir() 
-{ 
-	HMODULE module = GetModuleHandle(0); 
-	char pFileName[MAX_PATH]; 
-	GetModuleFileName(module, pFileName, MAX_PATH); 
-
-	string csFullPath(pFileName); 
-	int nPos = csFullPath.rfind('\\'); 
-	if( nPos == string::npos ) 
-		return string(""); 
-	else 
-		return csFullPath.substr(0, nPos); 
-}
-void ConvertUtf8ToGBK(string& strUtf8) 
-{
-	int len=MultiByteToWideChar(CP_UTF8, 0, (LPCTSTR)strUtf8.c_str(), -1, NULL,0);
-	WCHAR* wszGBK = new WCHAR[len+1];
-	memset(wszGBK, 0, len * 2 + 2);
-	MultiByteToWideChar(CP_UTF8, 0, (LPCTSTR)strUtf8.c_str(), -1, wszGBK, len);
-
-	len = WideCharToMultiByte(CP_ACP, 0, wszGBK, -1, NULL, 0, NULL, NULL);
-	char *szGBK=new char[len + 1];
-	memset(szGBK, 0, len + 1);
-	WideCharToMultiByte (CP_ACP, 0, wszGBK, -1, szGBK, len, NULL,NULL);
-	strUtf8 = szGBK;
-	delete[] szGBK;
-	delete[] wszGBK;
-}
-int CallApp(string path)
-{
-	STARTUPINFO si;
-	PROCESS_INFORMATION pi;
-	ZeroMemory(&si, sizeof(si));
-	si.cb = sizeof(si);
-	ZeroMemory(&pi, sizeof(pi));
-
-	if( !CreateProcess(NULL,   // No module name (use command line)
-		const_cast <char *>(path.c_str()),        // Command line
-		NULL,           // Process handle not inheritable
-		NULL,           // Thread handle not inheritable
-		FALSE,          // Set handle inheritance to FALSE
-		CREATE_NO_WINDOW,              // No creation flags
-		NULL,           // Use parent's environment block
-		NULL,           // Use parent's starting directory 
-		&si,            // Pointer to STARTUPINFO structure
-		&pi )           // Pointer to PROCESS_INFORMATION structure
-		) 
-	{
-		MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-		char szError[256];
-		sprintf(szError, "ERROR:CreateProcess failed (%d).\n", GetLastError());
-		wlog("CloudTerm\\cthandler.log",true,szError);
-		return -1;
-	}
-	else{
-		wlog("CloudTerm\\cthandler.log",true,"clickapp complete\n");
-		CloseHandle( pi.hProcess );
-		CloseHandle( pi.hThread );
-		return 0;
-	}
-}
+//处理服务器返回的信息
 int handler(char *cRecv)
 {
+	static int re_count=read_restart();
+	wlog("CloudTerm\\cthandler.log",true,"read_restart %d\n",re_count);
 	string arg=cRecv;
 	ConvertUtf8ToGBK(arg);
 	int locin;
@@ -177,8 +27,23 @@ int handler(char *cRecv)
 	}
 	if(arg.find("infotype")==string::npos)
 	{
-		MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-		wlog("CloudTerm\\cthandler.log",true,"ERROR:%s",arg.c_str());
+		wlog("CloudTerm\\cthandler.log",true,"接收到的信息:%s\n",arg.c_str());
+		if(arg.find("001")!=string::npos)
+			wlog("CloudTerm\\cthandler.log",true,"have 001\n");
+		if (re_count>0)
+		{
+			wlog("CloudTerm\\cthandler.log",true,"have more than zero\n");
+		}
+		if( re_count > 0 && arg.find("001") != string::npos )
+		{
+			wlog("CloudTerm\\cthandler.log",true,"hehe\n");
+			int res_mes=message_limit();
+			if(res_mes == -1)
+				exit(-1);
+			re_count--;
+			longjmp(jmp_env,re_count);
+		}
+		PrinErr(arg);
 		return -1;
 	}
 	int loc=arg.find("=");
@@ -195,11 +60,15 @@ int handler(char *cRecv)
 	CallApp(scmd);
 	return 0;
 }
-int _tmain(int argc, _TCHAR* argv[])
+
+int main(int argc, char* argv[])
 {
-	if(argc!=3)
+	InitErr();
+
+	//int re_count=read_restart();
+	if(argc!=2)
 	{
-		MessageBox(NULL,"param error","error",0);
+		PrinErr("|401|");
 		return -1;
 	}
 	wlog("CloudTerm\\cthandler.log",true,"%s:start\n",argv[0]);
@@ -248,31 +117,57 @@ int _tmain(int argc, _TCHAR* argv[])
 	{
 		wlog("CloudTerm\\cthandler.log",true,"ERROR:appid write to env \n");
 	}
+	ccip=getenv("CCIP");
+	/*从此处开始重新执行*/
+	int jmpres=setjmp(jmp_env);
+	if(jmpres>0)
+	{
+		wlog("CloudTerm\\cthandler.log",true,"重新开始执行\n");
+	}
 	string arg(argv[1]);
 	string logmsg="接收参数：";
 	logmsg+=argv[1];
-	ccip=argv[2];
-	memset(env,128,0);
-	sprintf(env,"CCIP=%s",ccip.c_str());
-	if(_putenv(env))
-	{
-		wlog("CloudTerm\\CloudTerm.log",true,"ERROR:put env ccip \n");
-	}
-	wlog("CloudTerm\\cthandler.log",true,"%s:%s %s\n",argv[0],logmsg.c_str(),ccip.c_str());
+	wlog("CloudTerm\\cthandler.log",true,"%s:%s %s\n",argv[0]
+	,logmsg.c_str(),ccip.c_str());
 	//接命令就发cc
-	//虚拟机控制台实现
 	int loc;
-
 	if ((loc = arg.find("|appid")) != string::npos)
 	{
 		string SendInfo = arg;
 		SOCKET Sock = tmp_sender(ccip, "50000");
 		if(Sock==-1)
-		{return -1;}
+		{
+			//int re_count=read_restart();
+			//re_count--;
+			int re_count=read_restart();
+			while (re_count>0)
+			{
+				closesocket(Sock);
+				int res=message_limit();
+				if (res == -1)
+				{
+					wlog("CloudTerm\\cthandler.log",true,"用户点击了取消\n");
+					exit(-1);
+				}
+				Sock=tmp_sender(ccip,"50000");
+				if (Sock!=-1)
+				{
+					break;
+				}
+				re_count--;
+			}
+		}
+		if (Sock == -1)
+		{
+			PrinErr("|404|");
+			return -1;
+		}
 		if(send(Sock,"if=clickapp\n",strlen("if=clickapp\n"),0)==SOCKET_ERROR)
 		{ 
-			MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-			wlog("CloudTerm\\cthandler.log",true,"ERROR:send data failed."); 
+			//MessageBox(NULL,"clickapp发送信息失败\n","ERROR",0);
+			PrinErr("|404|");
+			wlog("CloudTerm\\cthandler.log",true,"vmconsole发送信息失败，"
+				"if=clickapp WGLE=%d\n",WSAGetLastError()); 
 			return -1; 
 		} 
 		int bytes; 
@@ -280,8 +175,10 @@ int _tmain(int argc, _TCHAR* argv[])
 		memset(cRecv,0,1024);
 		if((bytes = recv(Sock, cRecv, 1024, 0)) == SOCKET_ERROR)
 		{ 
-			MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-			wlog("CloudTerm\\cthandler.log",true,"ERROR:recive data failed."); 
+			//MessageBox(NULL, "clickapp接收信息失败","",MB_OK);
+			PrinErr("|404|");
+			wlog("CloudTerm\\cthandler.log",true
+				,"recive data failed.WGLE=%d\n",WSAGetLastError()); 
 			return -1; 
 		}
 		if (!strncmp(cRecv, "ok", 2))
@@ -289,21 +186,27 @@ int _tmain(int argc, _TCHAR* argv[])
 			//wrlog("CloudTerm\\cthandler.log",SendInfo.c_str(),true); 
 			if(send(Sock,SendInfo.c_str(),strlen(SendInfo.c_str()),0)==SOCKET_ERROR)
 			{ 
-				MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-				wlog("CloudTerm\\cthandler.log",true,"ERROR:send data failed."); 
+				//MessageBox(NULL,"clickapp发送信息失败\n","ERROR",0);
+				PrinErr("|404|");
+				wlog("CloudTerm\\cthandler.log",true,"clickapp发送信息失败，"
+					"appid=userid= WGLE=%d\n",WSAGetLastError());  
 				//GetLastError();
 				return -1; 
 			} 
 			if((bytes = recv(Sock, cRecv, 1024, 0)) == SOCKET_ERROR)
 			{ 
-				MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-				wlog("CloudTerm\\cthandler.log",true,"ERROR:recive data failed."); 
+				//MessageBox(NULL, "clickapp接收信息失败","",MB_OK);
+				PrinErr("|404|");
+				wlog("CloudTerm\\cthandler.log",true
+					,"recive data failed.WGLE=%d\n",WSAGetLastError()); 
 				return -1; 
 			}
 		}
 		closesocket(Sock);
+		
 		handler(cRecv);
 	}
+	wlog("CloudTerm\\cthandler.log",true,"clickapp结束\n");
 	return 0;
 }
 

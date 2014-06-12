@@ -1,0 +1,21 @@
+----------------------------
+在accout.db中新增表privmuser。
+privmuser(vmuserid primary key,vmpasswd,flag);
+flag=0表示可用；
+flag=1表示已分配。
+-----------------------
+新增插件privmuser
+用于获取私有用户名和密码：
+
+-->if=privmuser
+<--ok
+-->get
+<--|vmuserid|vmpassword|
+   |no|
+---------------------------
+新增插件privmlive;
+用于上报vmlive所需的信息
+--->if=privmlive
+<---ok
+--->|vmuserid|userid|pwd|appid|granule|cmd|
+插件privmlive将所得到的信息插入到vmlive中。

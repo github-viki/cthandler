@@ -23,14 +23,17 @@
 #include "simpleDll.h"
 #define ERRDLL
 #include "errmsg.h"
+
 using namespace std;
 
 #include <stdlib.h>
+//错误弹出信息
 #pragma comment(lib,"errmsg.lib")
+//wr_log()
 #pragma comment(lib,"simpleDll.lib")
 #pragma comment(lib, "WtsApi32.lib")
+
 #pragma comment(lib, "ws2_32.lib")
+//加解密
 #pragma comment(lib,"cloudenc.lib")
 // TODO: 在此处引用程序需要的其他头文件
-//错误代码详情
-

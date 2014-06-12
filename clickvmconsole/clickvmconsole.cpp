@@ -2,86 +2,7 @@
 //
 
 #include "stdafx.h"
-#include <stdio.h>
-#include <windows.h>
-#include <Wtsapi32.h>
-#include <algorithm>
-#include <direct.h>
-#include <iostream>
-#include <string>
-#include <io.h>
-#include <windows.h>
-#include <ctime>
-#include <WinSock.h>
-#include "simpleDll.h"
-using namespace std;
-
-#include <stdlib.h>
-#pragma comment(lib, "WtsApi32.lib")
-#pragma comment(lib, "ws2_32.lib")
-#pragma comment(lib,"simpleDll.lib")
 extern void wrlog(char *filename,const char *p,bool writetime);
-int tmp_sender(string ip,string port)
-{
-	WSADATA wsa; 
-	//初始化套接字DLL 
-	if(WSAStartup(MAKEWORD(2,2),&wsa)!=0)
-	{ 
-		MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-		wrlog("CloudTerm\\cthandler.log","socket initialize failed.\n",true); 
-		return -1; 
-	} 
-	//创建套接字 
-	SOCKET sock; 
-	if((sock=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP))==INVALID_SOCKET)
-	{ 
-		MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-		wrlog("CloudTerm\\cthandler.log","create socket failed.\n",true); 
-		return -1; 
-	} 
-	struct sockaddr_in serverAddress; 
-	memset(&serverAddress,0,sizeof(sockaddr_in)); 
-	serverAddress.sin_family=AF_INET; 
-	serverAddress.sin_addr.S_un.S_addr = inet_addr(ip.c_str()); 
-	serverAddress.sin_port = htons(atoi(port.c_str())); 
-	//建立和服务器的连接 
-	if(connect(sock,(sockaddr*)&serverAddress,sizeof(serverAddress))==SOCKET_ERROR)
-	{ 
-		MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-		wrlog("CloudTerm\\cthandler.log","connect failed.\n",true); 
-		return -1; 
-	} 
-	//printf("Message from %s: %s\n",inet_ntoa(serverAddress.sin_addr),buf); 
-	return sock;
-}
-string GetModuleDir() 
-{ 
-	HMODULE module = GetModuleHandle(0); 
-	char pFileName[MAX_PATH]; 
-	GetModuleFileName(module, pFileName, MAX_PATH); 
-
-	string csFullPath(pFileName); 
-	int nPos = csFullPath.rfind('\\'); 
-	if( nPos == string::npos ) 
-		return string(""); 
-	else 
-		return csFullPath.substr(0, nPos); 
-}
-void ConvertUtf8ToGBK(string& strUtf8) 
-{
-	int len=MultiByteToWideChar(CP_UTF8, 0, (LPCTSTR)strUtf8.c_str(), -1, NULL,0);
-	WCHAR* wszGBK = new WCHAR[len+1];
-	memset(wszGBK, 0, len * 2 + 2);
-	MultiByteToWideChar(CP_UTF8, 0, (LPCTSTR)strUtf8.c_str(), -1, wszGBK, len);
-
-	len = WideCharToMultiByte(CP_ACP, 0, wszGBK, -1, NULL, 0, NULL, NULL);
-	char *szGBK=new char[len + 1];
-	memset(szGBK, 0, len + 1);
-	WideCharToMultiByte (CP_ACP, 0, wszGBK, -1, szGBK, len, NULL,NULL);
-	strUtf8 = szGBK;
-	delete[] szGBK;
-	delete[] wszGBK;
-}
 void VdProcess(char *cRecv)
 {
 	string vnc_path;
@@ -160,7 +81,8 @@ void VdProcess(char *cRecv)
 		&pi )           // Pointer to PROCESS_INFORMATION structure
 		) 
 	{
-		MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
+		//MessageBox(NULL, "vmconsole调用cacvd_old失败","",MB_OK);
+		PrinErr("|401|");
 		char szError[256];
 		sprintf(szError, "CreateProcess failed (%d).", GetLastError());
 		wrlog("CloudTerm\\cthandler.log",szError,true);
@@ -168,19 +90,21 @@ void VdProcess(char *cRecv)
 
 	CloseHandle( pi.hProcess );
 	CloseHandle( pi.hThread );
-	wrlog("CloudTerm\\cthandler.log","vdcomplete",true);
+	wrlog("CloudTerm\\cthandler.log","clickvmconsole结束",true);
 }
-int _tmain(int argc, _TCHAR* argv[])
+int main(int argc, char* argv[])
 {
 	if(argc<2)
 	{
-		MessageBox(NULL,"param error","error",0);
+		//MessageBox(NULL,"clickvmconsole参数错误","error",0);
+		PrinErr("|402|");
 		return -1;
 	}
+	InitErr();
 	string arg(argv[1]);
 	string logmsg="接收参数：";
 	logmsg+=argv[1];
-	string ccip(argv[2]);
+	string ccip=getenv("CCIP");
 	wrlog("CloudTerm\\cthandler.log",logmsg.c_str(),true);
 	wrlog("CloudTerm\\cthandler.log",ccip.c_str(),true);
 	//接命令就发cc
@@ -192,11 +116,14 @@ int _tmain(int argc, _TCHAR* argv[])
 		string SendInfo = arg;
 		SOCKET Sock = tmp_sender(ccip, "50000");
 		if(Sock==-1)
-		{return -1;}
+		{PrinErr("|404|");
+		return -1;}
 		if(send(Sock,"if=clickvmconsole\n",strlen("if=clickvmconsole\n"),0)==SOCKET_ERROR)
 		{ 
-			MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-			wrlog("CloudTerm\\cthandler.log","send data failed.",true); 
+			//MessageBox(NULL,"vmconsole发送信息失败\n","ERROR",0);
+			PrinErr("|404|");
+			wlog("CloudTerm\\cthandler.log",true,"vmconsole发送信息失败，"
+				"if=clickvmconsole WGLE=%d\n",WSAGetLastError()); 
 			return -1; 
 		} 
 		int bytes; 
@@ -204,8 +131,10 @@ int _tmain(int argc, _TCHAR* argv[])
 		memset(cRecv,0,1024);
 		if((bytes = recv(Sock, cRecv, 1024, 0)) == SOCKET_ERROR)
 		{ 
-			MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-			wrlog("CloudTerm\\cthandler.log","recive data failed.",true); 
+			//MessageBox(NULL, "vmconsole接收信息失败","",MB_OK);
+			PrinErr("|404|");
+			wlog("CloudTerm\\cthandler.log",true
+				,"recive data failed.WGLE=%d\n",WSAGetLastError()); 
 			return -1; 
 		}
 		if (!strncmp(cRecv, "ok", 2))
@@ -213,15 +142,18 @@ int _tmain(int argc, _TCHAR* argv[])
 			//wrlog("CloudTerm\\cthandler.log",SendInfo.c_str(),true); 
 			if(send(Sock,SendInfo.c_str(),strlen(SendInfo.c_str()),0)==SOCKET_ERROR)
 			{ 
-				MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-				wrlog("CloudTerm\\cthandler.log","send data failed.",true); 
-				GetLastError();
+				//MessageBox(NULL,"vmconsole发送信息失败\n","ERROR",0);
+				PrinErr("|404|");
+				wlog("CloudTerm\\cthandler.log",true,"vmconsole发送信息失败，"
+					"vmid=userid= WGLE=%d\n",WSAGetLastError()); 
 				return -1; 
 			} 
 			if((bytes = recv(Sock, cRecv, 1024, 0)) == SOCKET_ERROR)
 			{ 
-				MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-				wrlog("CloudTerm\\cthandler.log","recive data failed.",true); 
+				//MessageBox(NULL, "vmconsole接收信息失败","",MB_OK);
+				PrinErr("|404|");
+				wlog("CloudTerm\\cthandler.log",true
+					,"recive data failed.WGLE=%d\n",WSAGetLastError()); 
 				return -1; 
 			}
 		}

@@ -27,9 +27,11 @@ Fixed:		2014/01/09	删除不必要的信息
 #include <WinSock2.h>
 #include "simpleDll.h"
 #include <stdlib.h>
+#include "errmsg.h"
 string ccip;
 #pragma comment(lib,"simpleDll.lib")
 #pragma comment(lib,"ws2_32.lib")
+#pragma comment(lib,"errmsg.lib")
 string GetModuleDir() 
 { 
 	HMODULE module = GetModuleHandle(0); 
@@ -156,6 +158,7 @@ int judgeIpConnect(char ip[],int port)
 		WSACleanup();
 		return 1;}
 }
+//得到随机IP，成功的话返回0；出错返回-1；
 int getCCipRandom(char ips[][24],int *ipcount)
 {
 	wlog("CloudTerm\\cthandler.log",true,"getcciprandom\n");
@@ -234,16 +237,18 @@ int getCCipRandom(char ips[][24],int *ipcount)
 	}
 	else
 	{
-		return 0;
+		return -1;
 	}
 	*ipcount=count;
 
 	delete A;
 	delete B;
 	//fclose(file);
-	return 1;
+	return 0;
 
 }
+//设置一般的路径以及在环境变量的多个IP中选择一个可用的
+//成功返回0，出错返回-1；
 int configuration()
 {
 	string config_path = GetModuleDir();
@@ -252,10 +257,11 @@ int configuration()
 	char ccipArray[30][24];
 	int ipcount;
 	string ip;
-	if(!getCCipRandom(ccipArray,&ipcount))
-	{MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-	wlog("CloudTerm\\cthandler.log",true,"ERROR:read ip FAILED\n");
-	return -1;}
+	if(getCCipRandom(ccipArray,&ipcount))
+	{//MessageBox(NULL, "读取IP出错","",MB_OK);
+	wlog("CloudTerm\\cthandler.log",true,"ERROR:从环境变量中读取IP出错\n");
+	return -1;
+	}
 	int i;
 	for (i=0;i<ipcount;i++)
 	{
@@ -275,44 +281,14 @@ int configuration()
 		ccip = ip;
 	}
 	else{
-	wlog("CloudTerm\\cthandler.log",true,"ip has over\n");
+		PrinErr("|404|");
+		wlog("CloudTerm\\cthandler.log",true,"没有可用的CCIP\n");
 	return -1;
 	}
 	return 0;
 }
-int tmp_sender(string ip,string port)
-{
-	WSADATA wsa; 
-	//初始化套接字DLL 
-	if(WSAStartup(MAKEWORD(2,2),&wsa)!=0)
-	{ 
-		MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-		wr_Log("socket initialize failed.\n"); 
-		return -1; 
-	} 
-	//创建套接字 
-	SOCKET sock; 
-	if((sock=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP))==INVALID_SOCKET)
-	{ 
-		MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-		wr_Log("create socket failed.\n"); 
-		return -1; 
-	} 
-	struct sockaddr_in serverAddress; 
-	memset(&serverAddress,0,sizeof(sockaddr_in)); 
-	serverAddress.sin_family=AF_INET; 
-	serverAddress.sin_addr.S_un.S_addr = inet_addr(ip.c_str()); 
-	serverAddress.sin_port = htons(atoi(port.c_str())); 
-	//建立和服务器的连接 
-	if(connect(sock,(sockaddr*)&serverAddress,sizeof(serverAddress))==SOCKET_ERROR)
-	{ 
-		MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-		wr_Log("connect failed.\n"); 
-		return -1; 
-	} 
-	//printf("Message from %s: %s\n",inet_ntoa(serverAddress.sin_addr),buf); 
-	return sock;
-}
+
+//调用其他程序
 int CallApp(string path)
 {
 	STARTUPINFO si;
@@ -333,14 +309,15 @@ int CallApp(string path)
 		&pi )           // Pointer to PROCESS_INFORMATION structure
 		) 
 	{
-		MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
+		//MessageBox(NULL, "401:调用子程序失败","ERROR",MB_OK);
+		PrinErr("|401|");
 		char szError[256];
-		sprintf(szError, "ERROR:CreateProcess failed (%d).\n", GetLastError());
+		sprintf(szError, "ERROR:caccthandler创建进程失败GLE(%d).\n", GetLastError());
 		wrlog("CloudTerm\\cthandler.log",szError,true);
 	return -1;
 	}
 	else{
-		wrlog("CloudTerm\\cthandler.log"," caccthandler:complete\n",true);
+		wrlog("CloudTerm\\cthandler.log"," caccthandler:结束\n",true);
 		CloseHandle( pi.hProcess );
 		CloseHandle( pi.hThread );
 		return 0;
@@ -348,13 +325,22 @@ int CallApp(string path)
 }
 int main(int argc, char **argv)
 {
-	wlog("CloudTerm\\cthandler.log",true,"%s:start\n",argv[0]);
+	InitErr();
+	wlog("CloudTerm\\cthandler.log",true,"%s:开始\n",argv[0]);
 	string arg(argv[1]);
 	//wlog("CloudTerm\\cthandler.log",true,"recv:%s",arg.c_str());
 	if(configuration())
 	{
-		MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
+		//MessageBox(NULL, "CCIP不可用","ERROR",MB_OK);
+		wlog("CloudTerm\\cthandler.log",true,"在环境变量中读取IP失败\n");
 		return -1;
+	}
+	//将可用的ccip放到环境变量中
+	char env[128]={'\0'};
+	sprintf(env,"CCIP=%s",ccip.c_str());
+	if(_putenv(env))
+	{
+		wlog("CloudTerm\\CloudTerm.log",true,"ERROR:put env ccip \n");
 	}
 	//string arg="crp:|infotype=clicktplconsole|tplid=|userid=1|";
 	string logmsg="接收参数：";
@@ -373,14 +359,14 @@ int main(int argc, char **argv)
 	loc=arg.find("|");
 	appname.assign(arg.begin(),arg.begin()+loc);
 	scmd.assign(arg.begin()+loc,arg.end());
-	cmd="\""+appname+".exe"+"\" "+scmd+" "+ccip;
+	cmd="\""+appname+".exe"+"\" "+scmd;
 	//得到infotype如clickapp 或者是clicktplconsole等。
 	wlog("CloudTerm\\cthandler.log",true,"%s",cmd.c_str());
 	CallApp(cmd);
 	}
 	else
 	{
-		MessageBox(NULL, "网络无响应，请检查网络是否畅通？","",MB_OK);
-		wrlog("CloudTerm\\cthandler.log","ERROR:Ca Request Illeage!",true);
+		//MessageBox(NULL, "caccthandler参数不正确","ERROR",MB_OK);
+		wrlog("CloudTerm\\cthandler.log","ctlis调用caccthandler的参数不正确",true);
 	}
 }
